@@ -14,13 +14,14 @@ interface IMessage {
 
 const App = () => {
     const sawcket = connect("ws://");
-    const [username, setUsername] = useState("atlc");
+    const [username, setUsername] = useState("");
     const [input, setInput] = useState("");
     const [alert, setAlert] = useState("");
     const [messages, setMessages] = useState<IMessage[]>([]);
-    const [hasJoined, setHasJoined] = useState(true);
+    const [hasJoined, setHasJoined] = useState(false);
 
     useEffect(() => {
+        document.body.style.backgroundColor = "#ebe8d5";
         document.body.style.border = "15px solid #0159ef";
         document.body.style.minHeight = "100vh";
 
@@ -76,13 +77,13 @@ const App = () => {
             <div style={{ backgroundColor: "#ebe8d5", minHeight: "90vh", maxHeight: "90vh" }}>
                 <main className="container">
                     {!hasJoined && (
-                        <>
-                            <h1 className="text-primary text-center">Login, losers!</h1>
-                            <input name="usernameInput" onKeyDown={addMessageIfEnter} value={username} onChange={e => setUsername(e.target.value)} />
-                            <button onClick={handleLogin} className="btn btn-primary">
-                                Join!
-                            </button>
-                        </>
+                        <div className="mt-5 row justify-content-center">
+                            <div className="row justify-content-center border border-black">
+                                <label htmlFor="usernameInput">Enter your username:</label>
+                                <input name="usernameInput" onKeyDown={addMessageIfEnter} value={username} onChange={e => setUsername(e.target.value)} />
+                                <button onClick={handleLogin}>Sign in!</button>
+                            </div>
+                        </div>
                     )}
                     {hasJoined && (
                         <div style={{ height: "50%" }} className="row justify-content-center align-center">
