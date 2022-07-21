@@ -11,11 +11,12 @@ interface IMessage {
 const App = () => {
     const player = new Audio("http://gauss.ececs.uc.edu/Courses/c653/lectures/AIM/sound/imsend.wav");
 
-    const sawcket = connect("ws://localhost:3000");
+    const sawcket = connect("ws://");
     const [username, setUsername] = useState("");
     const [input, setInput] = useState("");
     const [alert, setAlert] = useState("");
     const [messages, setMessages] = useState<IMessage[]>([]);
+    const [hasJoined, setHasJoined] = useState(false);
 
     useEffect(() => {
         sawcket.on("hello", newUserLMao => {
@@ -33,6 +34,7 @@ const App = () => {
 
     const handleLogin = () => {
         if (!username) return;
+        setHasJoined(true);
         sawcket.emit("welcome", username);
     };
 
@@ -42,18 +44,24 @@ const App = () => {
         setInput("");
     };
 
+    const addMessageIfEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") {
+            handleChat();
+        }
+    };
+
     return (
         <main className="container my-5">
-            {!username && (
+            {!hasJoined && (
                 <>
                     <h1 className="text-primary text-center">Login, losers!</h1>
-                    <input value={username} onChange={e => setUsername(e.target.value)} />
+                    <input onKeyDown={addMessageIfEnter} value={username} onChange={e => setUsername(e.target.value)} />
                     <button onClick={handleLogin} className="btn btn-primary">
                         Join!
                     </button>
                 </>
             )}
-            {username && (
+            {hasJoined && (
                 <div>
                     <input value={input} onChange={e => setInput(e.target.value)} />
                     <button onClick={handleChat} className="btn btn-success">
