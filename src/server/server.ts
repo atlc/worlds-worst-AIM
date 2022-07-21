@@ -1,8 +1,10 @@
 import * as express from "express";
+import * as cors from "cors";
 import { Server } from "socket.io";
 
 const app = express();
 
+app.use(cors());
 app.use(express.static("public"));
 
 const port = process.env.PORT || 3000;
