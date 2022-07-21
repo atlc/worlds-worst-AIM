@@ -1,4 +1,8 @@
 import * as React from "react";
+import { MdFormatBold, MdFormatItalic, MdClose, MdCropSquare, MdMinimize, MdFormatUnderlined } from "react-icons/md";
+import { BsEmojiSunglasses } from "react-icons/bs";
+import { HiOutlineMailOpen } from "react-icons/hi";
+import { FcPicture } from "react-icons/fc";
 import { useState, useEffect } from "react";
 import { connect } from "socket.io-client";
 
@@ -9,16 +13,18 @@ interface IMessage {
 }
 
 const App = () => {
-    const player = new Audio("http://gauss.ececs.uc.edu/Courses/c653/lectures/AIM/sound/imsend.wav");
-
     const sawcket = connect("ws://");
-    const [username, setUsername] = useState("");
+    const [username, setUsername] = useState("atlc");
     const [input, setInput] = useState("");
     const [alert, setAlert] = useState("");
     const [messages, setMessages] = useState<IMessage[]>([]);
-    const [hasJoined, setHasJoined] = useState(false);
+    const [hasJoined, setHasJoined] = useState(true);
 
     useEffect(() => {
+        document.body.style.border = "15px solid #0159ef";
+        document.body.style.minHeight = "100vh";
+
+        const player = new Audio("/assets/bloop.wav");
         sawcket.on("hello", newUserLMao => {
             setAlert(`Everyone say hey to ${newUserLMao}!`);
             setTimeout(() => {
@@ -28,6 +34,8 @@ const App = () => {
 
         sawcket.on("update", msgs => {
             setMessages(msgs);
+            player.pause();
+            player.currentTime = 0;
             player.play();
         });
     }, []);
@@ -44,38 +52,77 @@ const App = () => {
         setInput("");
     };
 
-    const addMessageIfEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const addMessageIfEnter = (e: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) => {
         if (e.key === "Enter") {
-            handleChat();
+            if ((e.target as HTMLTextAreaElement).name === "usernameInput") handleLogin();
+
+            if ((e.target as HTMLTextAreaElement).name === "chatInput") handleChat();
         }
     };
 
     return (
-        <main className="container my-5">
-            {!hasJoined && (
-                <>
-                    <h1 className="text-primary text-center">Login, losers!</h1>
-                    <input onKeyDown={addMessageIfEnter} value={username} onChange={e => setUsername(e.target.value)} />
-                    <button onClick={handleLogin} className="btn btn-primary">
-                        Join!
-                    </button>
-                </>
-            )}
-            {hasJoined && (
-                <div>
-                    <input value={input} onChange={e => setInput(e.target.value)} />
-                    <button onClick={handleChat} className="btn btn-success">
-                        Add text to chat!
-                    </button>
-                    {messages.map((msg, index) => (
-                        <p key={`chat-message-${index + 1}`}>
-                            <strong>@{msg.user}:</strong> &lt;{new Date(msg.time).toLocaleString()}&gt; {msg.content}
-                        </p>
-                    ))}
-                </div>
-            )}
-            {alert && <div className="alert alert-success">{alert}</div>}
-        </main>
+        <div>
+            <div className="text-end span-parent pb-1" style={{ fontSize: "1.8rem", backgroundColor: "#0159ef" }}>
+                <span style={{ color: "white", border: "2px solid white" }}>
+                    <MdMinimize />
+                </span>
+                <span style={{ color: "white", border: "2px solid white" }}>
+                    <MdCropSquare />
+                </span>
+                <span style={{ color: "white", backgroundColor: "#c5381f", border: "2px solid white" }}>
+                    <MdClose />
+                </span>
+            </div>
+            <div style={{ backgroundColor: "#ebe8d5", minHeight: "90vh", maxHeight: "90vh" }}>
+                <main className="container">
+                    {!hasJoined && (
+                        <>
+                            <h1 className="text-primary text-center">Login, losers!</h1>
+                            <input name="usernameInput" onKeyDown={addMessageIfEnter} value={username} onChange={e => setUsername(e.target.value)} />
+                            <button onClick={handleLogin} className="btn btn-primary">
+                                Join!
+                            </button>
+                        </>
+                    )}
+                    {hasJoined && (
+                        <div style={{ height: "50%" }} className="row justify-content-center align-center">
+                            <div className="chatPane">
+                                {messages.map((msg, index) => (
+                                    <p key={`chat-message-${index + 1}`}>
+                                        <strong style={{ color: index % 2 ? "red" : "blue", fontSize: "1.2rem" }}>{msg.user}:</strong> &lt;{new Date(msg.time).toLocaleString()}&gt; {msg.content}
+                                    </p>
+                                ))}
+                            </div>
+                            <div className="text-center button-panel">
+                                <span>
+                                    <MdFormatBold />
+                                </span>
+                                <span>
+                                    <MdFormatItalic />
+                                </span>
+                                <span>
+                                    <MdFormatUnderlined />
+                                </span>
+                                <span>
+                                    <a href="#">link</a>{" "}
+                                </span>
+                                <span>
+                                    <FcPicture />
+                                </span>
+                                <span style={{ backgroundColor: "#d6dd54" }}>
+                                    <BsEmojiSunglasses />
+                                </span>
+                                <span style={{ backgroundColor: "#d6dd54" }}>
+                                    <HiOutlineMailOpen />
+                                </span>
+                            </div>
+                            <textarea name="chatInput" onKeyDown={addMessageIfEnter} value={input} onChange={e => setInput(e.target.value)} />
+                        </div>
+                    )}
+                    {alert && <div className="alert alert-success">{alert}</div>}
+                </main>
+            </div>
+        </div>
     );
 };
 

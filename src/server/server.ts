@@ -19,7 +19,7 @@ socketBoi.on("connection", socket => {
     });
 
     socket.on("chat", (message: IMessage) => {
-        messages = [{ ...message, time: Date.now() }, ...messages];
+        messages = [{ ...message, time: Date.now() }, ...messages].slice(0, 10);
         socketBoi.emit("update", messages);
     });
 });
