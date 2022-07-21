@@ -67,8 +67,8 @@ const App = () => {
                     <button onClick={handleChat} className="btn btn-success">
                         Add text to chat!
                     </button>
-                    {messages.map(msg => (
-                        <p>
+                    {messages.map((msg, index) => (
+                        <p key={`chat-message-${index + 1}`}>
                             <strong>@{msg.user}:</strong> &lt;{new Date(msg.time).toLocaleString()}&gt; {msg.content}
                         </p>
                     ))}
