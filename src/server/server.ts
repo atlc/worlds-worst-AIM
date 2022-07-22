@@ -12,10 +12,23 @@ const port = process.env.PORT || 3000;
 const socketServer = new Server(app.listen(port, () => console.log(`Server listening on port: ${port}`)));
 
 let messages: IMessage[] = [];
+let usersTyping: string[] = [];
 
 socketServer.on("connection", socket => {
     socket.on("welcome", newUser => {
         socketServer.emit("hello", newUser);
+    });
+
+    socket.on("typing", user => {
+        usersTyping.push(user);
+
+        socketServer.emit("activeTypers", usersTyping);
+    });
+
+    socket.on("stoppedTyping", user => {
+        usersTyping = usersTyping.filter(usr => usr !== user);
+
+        socketServer.emit("activeTypers", usersTyping);
     });
 
     socket.on("chat", (message: IMessage) => {

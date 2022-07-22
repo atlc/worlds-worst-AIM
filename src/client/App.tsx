@@ -6,6 +6,7 @@ import { FcPicture } from "react-icons/fc";
 import { FaRunning } from "react-icons/fa";
 import { useState, useEffect, useRef } from "react";
 import { connect } from "socket.io-client";
+import e from "express";
 
 interface IMessage {
     content: string;
@@ -22,6 +23,8 @@ const App = () => {
     const [username, setUsername] = useState("");
     const [hasJoined, setHasJoined] = useState(false);
     const [messages, setMessages] = useState<IMessage[]>([]);
+    const [currentlyTypingUsers, setCurrentlyTypingUsers] = useState([]);
+    const [isTyping, setIsTyping] = useState(false);
 
     useEffect(() => {
         document.body.style.backgroundColor = "#ebe8d5";
@@ -40,6 +43,8 @@ const App = () => {
             }, 2000);
         });
 
+        socket.on("activeTypers", users => setCurrentlyTypingUsers(users));
+
         socket.on("update", msgs => {
             setMessages(msgs);
             player.pause();
@@ -53,6 +58,14 @@ const App = () => {
             socket.close();
         };
     }, []);
+
+    useEffect(() => {
+        if (isTyping) {
+            socket.emit("typing", username);
+        } else {
+            socket.emit("stoppedTyping", username);
+        }
+    }, [isTyping]);
 
     const handleLogout = () => {
         setUsername("");
@@ -75,12 +88,19 @@ const App = () => {
 
         socket.emit("chat", { content: input, user: username });
         setInput("");
+        setIsTyping(false);
     };
 
     const addMessageIfEnter = (e: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+        if ((e.target as HTMLTextAreaElement).name === "chatInput") {
+            setIsTyping(true);
+            setTimeout(() => {
+                setIsTyping(false);
+            }, 5000);
+        }
+
         if (e.key === "Enter") {
             if ((e.target as HTMLTextAreaElement).name === "usernameInput") handleLogin();
-
             if ((e.target as HTMLTextAreaElement).name === "chatInput") handleChat();
         }
     };
@@ -118,6 +138,13 @@ const App = () => {
                                 </div>
                             )}
                             <div className="chatPane">
+                                <div style={{ display: "flex", justifyContent: "right" }}>
+                                    {currentlyTypingUsers.length > 0 && (
+                                        <p style={{ position: "absolute", zIndex: 50, fontWeight: "bold", fontSize: "1.2rem" }}>
+                                            {currentlyTypingUsers.join(", ")} {currentlyTypingUsers.length === 1 ? "is" : "are"} typing...
+                                        </p>
+                                    )}
+                                </div>
                                 {messages.map((msg, index) => (
                                     <p key={`chat-message-${index + 1}`}>
                                         <strong style={{ color: index % 2 ? "red" : "blue", fontSize: "1.2rem" }}>{msg.user}:</strong> &lt;{new Date(msg.time).toLocaleString()}&gt; {msg.content}
@@ -165,7 +192,5 @@ const App = () => {
         </div>
     );
 };
-
-interface AppProps {}
 
 export default App;
