@@ -19,7 +19,11 @@ socketServer.on("connection", socket => {
     });
 
     socket.on("chat", (message: IMessage) => {
-        messages = [...messages, { ...message, content: message.content.replace("hunter2", "*******"), time: Date.now() }].slice(0, 7);
+        messages = [...messages, { ...message, content: message.content.replace("hunter2", "*******"), time: Date.now() }]
+            .sort((a, b) => (b.time as number) - (a.time as number))
+            .slice(0, 20)
+            .reverse();
+
         socketServer.emit("update", messages);
     });
 });

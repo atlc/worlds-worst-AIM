@@ -4,7 +4,7 @@ import { BsEmojiSunglasses } from "react-icons/bs";
 import { HiOutlineMailOpen } from "react-icons/hi";
 import { FcPicture } from "react-icons/fc";
 import { FaRunning } from "react-icons/fa";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { connect } from "socket.io-client";
 
 interface IMessage {
@@ -15,6 +15,8 @@ interface IMessage {
 
 const App = () => {
     const socket = connect("ws://");
+    const chatRef = useRef<null | HTMLDivElement>(null);
+    const inputRef = useRef<null | HTMLTextAreaElement>(null);
     const [input, setInput] = useState("");
     const [alert, setAlert] = useState("");
     const [username, setUsername] = useState("");
@@ -23,13 +25,16 @@ const App = () => {
 
     useEffect(() => {
         document.body.style.backgroundColor = "#ebe8d5";
-        document.body.style.border = "15px solid #0159ef";
+        document.body.style.borderLeft = "10px solid #0159ef";
+        document.body.style.borderRight = "10px solid #0159ef";
+        document.body.style.borderBottom = "15px solid #0159ef";
+        document.body.style.borderTop = "5px solid #0159ef";
         document.body.style.minHeight = "100vh";
 
         const player = new Audio("/assets/bloop.wav");
 
-        socket.on("hello", newUserLMao => {
-            setAlert(`Everyone say hey to ${newUserLMao}!`);
+        socket.on("hello", newUser => {
+            setAlert(`Everyone say hey to ${newUser}!`);
             setTimeout(() => {
                 setAlert("");
             }, 2000);
@@ -40,6 +45,8 @@ const App = () => {
             player.pause();
             player.currentTime = 0;
             player.play();
+            chatRef.current?.scrollIntoView({ behavior: "smooth" });
+            inputRef.current?.focus();
         });
 
         return () => {
@@ -105,12 +112,18 @@ const App = () => {
                     {hasJoined && (
                         <div style={{ height: "50%" }} className="row justify-content-center align-center">
                             <h4 className="display-4 fw-bold mt-2 text-center">ATLC Instant Messenger</h4>
+                            {alert && (
+                                <div style={{ zIndex: "50", position: "absolute" }} className="row justify-content-end mt-3">
+                                    <div className="col-4 alert alert-info fw-bold">{alert}</div>
+                                </div>
+                            )}
                             <div className="chatPane">
                                 {messages.map((msg, index) => (
                                     <p key={`chat-message-${index + 1}`}>
                                         <strong style={{ color: index % 2 ? "red" : "blue", fontSize: "1.2rem" }}>{msg.user}:</strong> &lt;{new Date(msg.time).toLocaleString()}&gt; {msg.content}
                                     </p>
                                 ))}
+                                <div ref={chatRef}></div>
                             </div>
                             <div className="text-center button-panel">
                                 <span>
@@ -137,7 +150,7 @@ const App = () => {
                             </div>
 
                             <div className="row justify-content-between">
-                                <textarea className="col-10" name="chatInput" onKeyDown={addMessageIfEnter} value={input} onChange={e => setInput(e.target.value)} />
+                                <textarea ref={inputRef} className="col-10" name="chatInput" onKeyDown={addMessageIfEnter} value={input} onChange={e => setInput(e.target.value)} />
                                 <span
                                     onClick={handleChat}
                                     className="col-1 d-flex align-items-center justify-content-center"
@@ -147,7 +160,6 @@ const App = () => {
                             </div>
                         </div>
                     )}
-                    {alert && <div className="alert alert-success">{alert}</div>}
                 </main>
             </div>
         </div>
