@@ -9,18 +9,18 @@ app.use(express.static("public"));
 
 const port = process.env.PORT || 3000;
 
-const socketBoi = new Server(app.listen(port, () => console.log(`Server listening on port: ${port}`)));
+const socketServer = new Server(app.listen(port, () => console.log(`Server listening on port: ${port}`)));
 
 let messages: IMessage[] = [];
 
-socketBoi.on("connection", socket => {
+socketServer.on("connection", socket => {
     socket.on("welcome", newUser => {
-        socketBoi.emit("hello", newUser);
+        socketServer.emit("hello", newUser);
     });
 
     socket.on("chat", (message: IMessage) => {
-        messages = [{ ...message, time: Date.now() }, ...messages].slice(0, 10);
-        socketBoi.emit("update", messages);
+        messages = [...messages, { ...message, content: message.content.replace("hunter2", "*******"), time: Date.now() }].slice(0, 7);
+        socketServer.emit("update", messages);
     });
 });
 

@@ -3,6 +3,7 @@ import { MdFormatBold, MdFormatItalic, MdClose, MdCropSquare, MdMinimize, MdForm
 import { BsEmojiSunglasses } from "react-icons/bs";
 import { HiOutlineMailOpen } from "react-icons/hi";
 import { FcPicture } from "react-icons/fc";
+import { FaRunning } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { connect } from "socket.io-client";
 
@@ -13,12 +14,12 @@ interface IMessage {
 }
 
 const App = () => {
-    const sawcket = connect("ws://");
-    const [username, setUsername] = useState("");
+    const socket = connect("ws://");
     const [input, setInput] = useState("");
     const [alert, setAlert] = useState("");
+    const [username, setUsername] = useState("z");
+    const [hasJoined, setHasJoined] = useState(true);
     const [messages, setMessages] = useState<IMessage[]>([]);
-    const [hasJoined, setHasJoined] = useState(false);
 
     useEffect(() => {
         document.body.style.backgroundColor = "#ebe8d5";
@@ -26,30 +27,46 @@ const App = () => {
         document.body.style.minHeight = "100vh";
 
         const player = new Audio("/assets/bloop.wav");
-        sawcket.on("hello", newUserLMao => {
+
+        socket.on("hello", newUserLMao => {
             setAlert(`Everyone say hey to ${newUserLMao}!`);
             setTimeout(() => {
                 setAlert("");
             }, 2000);
         });
 
-        sawcket.on("update", msgs => {
+        socket.on("update", msgs => {
             setMessages(msgs);
             player.pause();
             player.currentTime = 0;
             player.play();
         });
+
+        return () => {
+            socket.close();
+        };
     }, []);
+
+    const handleLogout = () => {
+        setUsername("");
+        setHasJoined(false);
+    };
 
     const handleLogin = () => {
         if (!username) return;
         setHasJoined(true);
-        sawcket.emit("welcome", username);
+        socket.emit("welcome", username);
     };
 
     const handleChat = () => {
         if (!input) return;
-        sawcket.emit("chat", { content: input, user: username });
+
+        if (input === "\n") {
+            setInput("");
+            return;
+        }
+
+        socket.emit("chat", { content: input, user: username });
         setInput("");
     };
 
@@ -70,7 +87,7 @@ const App = () => {
                 <span style={{ color: "white", border: "2px solid white" }}>
                     <MdCropSquare />
                 </span>
-                <span style={{ color: "white", backgroundColor: "#c5381f", border: "2px solid white" }}>
+                <span onClick={() => handleLogout()} style={{ color: "white", backgroundColor: "#c5381f", border: "2px solid white" }}>
                     <MdClose />
                 </span>
             </div>
@@ -87,6 +104,7 @@ const App = () => {
                     )}
                     {hasJoined && (
                         <div style={{ height: "50%" }} className="row justify-content-center align-center">
+                            <h4 className="display-4 fw-bold mt-2 text-center">ATLC Instant Messenger</h4>
                             <div className="chatPane">
                                 {messages.map((msg, index) => (
                                     <p key={`chat-message-${index + 1}`}>
@@ -117,7 +135,16 @@ const App = () => {
                                     <HiOutlineMailOpen />
                                 </span>
                             </div>
-                            <textarea name="chatInput" onKeyDown={addMessageIfEnter} value={input} onChange={e => setInput(e.target.value)} />
+
+                            <div className="row justify-content-between">
+                                <textarea className="col-10" name="chatInput" onKeyDown={addMessageIfEnter} value={input} onChange={e => setInput(e.target.value)} />
+                                <span
+                                    onClick={handleChat}
+                                    className="col-1 d-flex align-items-center justify-content-center"
+                                    style={{ backgroundColor: "black", color: "#d6dd54", fontSize: "3.7rem", borderRadius: "10%" }}>
+                                    <FaRunning />
+                                </span>
+                            </div>
                         </div>
                     )}
                     {alert && <div className="alert alert-success">{alert}</div>}
