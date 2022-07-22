@@ -17,8 +17,8 @@ const App = () => {
     const socket = connect("ws://");
     const [input, setInput] = useState("");
     const [alert, setAlert] = useState("");
-    const [username, setUsername] = useState("z");
-    const [hasJoined, setHasJoined] = useState(true);
+    const [username, setUsername] = useState("");
+    const [hasJoined, setHasJoined] = useState(false);
     const [messages, setMessages] = useState<IMessage[]>([]);
 
     useEffect(() => {
